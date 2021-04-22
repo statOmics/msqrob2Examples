@@ -1,10 +1,10 @@
-# HDA2020
+# msqrob2Examples
 
-[![Render and Deploy](https://github.com/statOmics/HDA2020/workflows/Render%20and%20Deploy/badge.svg)](https://github.com/statOmics/HDA2020/actions)
+[![Render and Deploy](https://github.com/statOmics/msqrob2Examples/workflows/Render%20and%20Deploy/badge.svg)](https://github.com/statOmics/msqrob2Examples/actions)
 
-Course site for High Dimensional Data Analysis for the Master of statistical data analysis at Ghent University.
+Site with examples and workflows for the msqrob2 tool on Bioconductor.
 
-https://statomics.github.io/HDA2020/
+https://statomics.github.io/msqrob2Examples/
 
 This work is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](https://creativecommons.org/licenses/by-nc-sa/4.0)
 
