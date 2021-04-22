@@ -1,0 +1,32 @@
+name : "msqrob2 Examples"
+title : "Examples and workflows for differential proteomics data analysis with msqrob2"
+navbar:
+  title: "msqrob2Examples"
+  type: inverse
+  left:
+    - icon: fa-home
+      href: index.html
+    - text: "Examples"
+      icon: fa-chalkboard-teacher
+      menu:
+      - text: "two-group design"
+        href: cptac.html
+      - text: "two-group design with blocking"
+        href: mouseRCB2.html
+      - text: "multi-factorial design with blocking"
+        href: heartMainInteractionStageR.html
+  right:
+    - icon: fab fa-github
+      href: https://github.com/statOmics/msqrob2Examples
+    - text: "statOmics"
+      href: http://statomics.github.io/
+output:
+    html_document:
+      code_download: true
+      theme: cosmo
+      toc: true
+      toc_float: true
+      highlight: tango
+      number_sections: true
+      df_print: paged
+exclude: ["install.R"]

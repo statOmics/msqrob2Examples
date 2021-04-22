@@ -1,0 +1,55 @@
+---
+title: Examples and workflows for differential proteomics data analysis with msqrob2
+output:
+    html_document:
+      theme: default
+      code_download: false
+      toc: false
+      toc_float: false
+      number_sections: false
+---
+
+```{r setup, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+***
+
+```{r}
+knitr::include_graphics("./figures/msWorkflow.png")
+```
+
+
+### Intro
+
+Mass spectrometry based proteomic experiments generate ever larger datasets and, as a consequence, complex data interpretation challenges. This course focuses on the statistical concepts for peptide identification, quantification, and differential analysis. Moreover, more advanced experimental designs and blocking will also be introduced.
+
+Our tool `msqrob2` provides a
+
+- robust statistical framework for
+- differential analysis of proteomics data with
+- simple and compex designs.
+
+The package include workflows that
+
+- protein-level workflows that first summarise the peptide-level data to protein level expression values [@sticker2020]
+- peptide-level workflows that immediately model the peptide intensities and provide
+inference on DE at the protein level [@goeminne2016] and [@sticker2020].
+- hurdle workflow to improve the power in the presence of missing peptide intensities which are common in proteomics experiments.
+
+### Examples
+
+1. Two group comparison: [cptac spike-in study](./cptac.html)
+
+2. Block designs
+    - Two treatment groups and blocking [Mouse T-cell example](./mouseRCB2.html)
+    - Factorial design and blocking [Heart study](./heartMainInteractionStageR.html)   
+
+3. Hurdle workflow
+
+4. Clustered designs
+
+    - Repeated measures design
+    - longitudinal design
+
+4. Method comparison
