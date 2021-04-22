@@ -7,11 +7,11 @@ on:
   pull_request:
     branches:
       - master
-      
+
 jobs:
   render:
     runs-on: macOS-latest
-    
+
     steps:
       - name: Check out repo
         uses: actions/checkout@v2
@@ -26,14 +26,14 @@ jobs:
 
       - name: Set up pandoc
         uses: r-lib/actions/setup-pandoc@master
-        
+
       - name: Set up TinyTex
         uses: r-lib/actions/setup-tinytex@v1
-        
+
       - name: Install X11 dependencies on MacOS
         if: runner.os == 'macOS'
         run: |
-          brew cask install xquartz
+          brew install xquartz
 
       - name: Install dependencies
         run: |
@@ -47,12 +47,12 @@ jobs:
           pkgs <- installed.packages()[, "Package"]
           sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}
-        
+
       - name: Render site
         run: |
           rmarkdown::render_site()
         shell: Rscript {0}
-      
+
       - name: Deploy 🚀
         if: github.event_name == 'push'
         uses: JamesIves/github-pages-deploy-action@3.6.2
@@ -60,7 +60,7 @@ jobs:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: _site
-          
+
       - name: Upload LaTeX logs
         if: failure()
         uses: actions/upload-artifact@main
