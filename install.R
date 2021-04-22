@@ -3,8 +3,7 @@ install.packages(c("remotes", "BiocManager"), Ncpus = 2L)
 
 BiocManager::install(
   c(
-    "statOmics/msqrob2",
-    "rformassspectrometry/QFeatures",
+    "QFeatures",
     "multcomp",
     "gridExtra",
     "knitr",
@@ -20,7 +19,8 @@ BiocManager::install(
     "MsCoreUtils",
     "stageR",
     "magick",
-    "plotly"
+    "plotly",
+    "statOmics/msqrob2"
   ),
   Ncpus = 2L)
 
