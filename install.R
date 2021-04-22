@@ -4,7 +4,7 @@ install.packages(c("remotes", "BiocManager"), Ncpus = 2L)
 BiocManager::install(
   c(
     "statOmics/msqrob2",
-    "QFeatures",
+    "rformassspectrometry/QFeatures",
     "multcomp",
     "gridExtra",
     "knitr",
