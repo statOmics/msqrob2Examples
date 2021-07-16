@@ -49,6 +49,7 @@ inference on DE at the protein level [@goeminne2016] and [@sticker2020].
 
 4. Clustered designs
 
+    - Designs with technical and biological repeats:[francisella example](./francisella.html)
     - Repeated measures design
     - longitudinal design
 
