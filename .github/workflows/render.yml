@@ -15,28 +15,23 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Set up R
         uses: r-lib/actions/setup-r@master
         with:
-          r-version: 'devel'
+          r-version: '4.1'
           crayon.enabled: 'FALSE'
 
       - name: Set up pandoc
         uses: r-lib/actions/setup-pandoc@master
-
+        
       - name: Set up TinyTex
         uses: r-lib/actions/setup-tinytex@v1
 
-      - name: Install X11 dependencies on MacOS
-        if: runner.os == 'macOS'
-        run: |
-          brew install xquartz
-
       - name: Install dependencies
         run: |
+          install.packages("rmarkdown")
+          install.packages("knitr")
           source("install.R")
         shell: Rscript {0}
 
@@ -60,12 +55,3 @@ jobs:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages
           FOLDER: _site
-
-      - name: Upload LaTeX logs
-        if: failure()
-        uses: actions/upload-artifact@main
-        with:
-          name: latex-logs
-          path: |
-            *.log
-            *.tex
