@@ -39,11 +39,11 @@ inference on DE at the protein level [@goeminne2016] and [@sticker2020].
 
 ### Examples
 
-1. Two group comparison: [cptac spike-in study](./cptac.html)
+1. Two group comparison: [cptac spike-in study](https://bioconductor.org/packages/release/bioc/vignettes/msqrob2/inst/doc/cptac.html)
 
 2. Block designs
     - Two treatment groups and blocking [Mouse T-cell example](./mouseRCB2.html)
-    - Factorial design and blocking [Heart study](./heartMainInteractionStageR.html)   
+    - Factorial design and blocking [Heart study](./heartMainInteractionStageR.html)
 
 3. Hurdle workflow
 
