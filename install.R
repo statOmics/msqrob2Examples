@@ -12,7 +12,6 @@ BiocManager::install(
     "sessioninfo",
     "rmarkdown",
     "tidyverse",
-    "plotly",
     "msdata",
     "MSnbase",
     "matrixStats",
@@ -20,9 +19,6 @@ BiocManager::install(
     "stageR",
     "magick",
     "plotly",
-    "statOmics/msqrob2"
+    "msqrob2"
   ),
   Ncpus = 2L)
-
-remotes::install_github("hadley/emo")
-remotes::install_github("vqv/ggbiplot")
