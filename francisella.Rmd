@@ -42,7 +42,7 @@ library(plotly)
 peptidesFile <- "https://raw.githubusercontent.com/statOmics/MSqRobSumPaper/master/Francisella/data/maxquant/peptides.txt"
 
 ecols <- grep(
-  "Intensity\\.", 
+  "Intensity\\.",
   names(read.delim(peptidesFile))
   )
 
@@ -55,7 +55,7 @@ pe <- readQFeatures(
 colnames(pe)
 ```
 
-The annotation can be derived from the file name. 
+The annotation can be derived from the file name.
 
 ```{r}
 colData(pe)$genotype <- substr(colnames(pe[[1]]),12,13) %>%
@@ -73,13 +73,13 @@ We calculate how many non zero intensities we have per peptide and this is often
 rowData(pe[["peptideRaw"]])$nNonZero <- rowSums(assay(pe[["peptideRaw"]]) > 0)
 ```
 
-Because every biorep is assessed in technical triplicate, we will also calculate the number of biorepeats in which each peptide is observed. 
+Because every biorep is assessed in technical triplicate, we will also calculate the number of biorepeats in which each peptide is observed.
 
 ```{r}
 rowData(pe[["peptideRaw"]])$nNonZeroBiorep <- apply(
-  assay(pe[["peptideRaw"]]), 
-  1, 
-  function(intensity) 
+  assay(pe[["peptideRaw"]]),
+  1,
+  function(intensity)
     colData(pe)$biorep[intensity>0] %>%
     unique %>%
     length)
@@ -100,11 +100,11 @@ intensities are missing.
 
 # Preprocessing
 
-This section preforms preprocessing for the peptide data. 
-This include 
+This section preforms preprocessing for the peptide data.
+This include
 
-- log transformation, 
-- filtering and 
+- log transformation,
+- filtering and
 - summarisation of the data.
 
 ## Log transform the data
@@ -121,9 +121,9 @@ In our approach a peptide can map to multiple proteins, as long as there is
 none of these proteins present in a smaller subgroup.
 
 ```{r}
-pe[["peptideLog"]] <-
- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$Proteins
- %in% smallestUniqueGroups(rowData(pe[["peptideLog"]])$Proteins),]
+pe <- filterFeatures(pe,
+  ~ Proteins %in% smallestUniqueGroups(rowData(pe[["peptideLog"]])$Proteins)
+)
 ```
 
 2. Remove reverse sequences (decoys) and contaminants
@@ -131,36 +131,36 @@ pe[["peptideLog"]] <-
 We now remove the contaminants and peptides that map to decoy sequences.
 
 ```{r}
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$Reverse != "+", ]
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$
-    Contaminant != "+", ]
+pe <- filterFeatures(pe, ~ Reverse != "+")
+pe <- filterFeatures(pe, ~ Contaminant != "+")
 ```
 
 3. Drop peptides that were only identified in a single biorepeat
 
-Note, that in experiments without technical repeats we filter on the number of samples in which a peptide is picked up. Here, we will require that a peptide is picked up in at least two biorepeats. 
+Note, that in experiments without technical repeats we filter on the number of samples in which a peptide is picked up. Here, we will require that a peptide is picked up in at least two biorepeats.
 
 ```{r}
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$nNonZeroBiorep >= 2, ]
+pe <- filterFeatures(pe, ~ nNonZeroBiorep >= 2)
 nrow(pe[["peptideLog"]])
 ```
 
 We keep `r nrow(pe[["peptideLog"]])` peptides upon filtering.
 
 
-## Normalize the data using median centering 
+## Normalize the data using median centering
 
-We normalize the data by substracting the sample median from every intensity for peptide $p$  in a sample $i$: 
+We normalize the data by substracting the sample median from every intensity for peptide $p$  in a sample $i$:
 
-$$y_{ip}^\text{norm} = y_{ip} - \hat\mu_i$$ 
+$$y_{ip}^\text{norm} = y_{ip} - \hat\mu_i$$
 
 with $\hat\mu_i$ the median intensity over all observed peptides in sample $i$.
 
 ```{r}
-pe <- normalize(pe, 
-                i = "peptideLog", 
-                name = "peptideNorm", 
-                method = "center.median")
+pe <- normalize(pe,
+  i = "peptideLog",
+  name = "peptideNorm",
+  method = "center.median"
+)
 ```
 
 
@@ -169,12 +169,12 @@ pe <- normalize(pe,
 Upon the normalisation the density curves are nicely registered
 
 ```{r}
-pe[["peptideNorm"]] %>% 
+pe[["peptideNorm"]] %>%
   assay %>%
   as.data.frame() %>%
-  gather(sample, intensity) %>% 
+  gather(sample, intensity) %>%
   mutate(biorep = colData(pe)[sample,"biorep"]) %>%
-  ggplot(aes(x = intensity,group = sample,color = biorep)) + 
+  ggplot(aes(x = intensity,group = sample,color = biorep)) +
     geom_density()
 ```
 
@@ -182,7 +182,7 @@ We can visualize our data using a Multi Dimensional Scaling plot,
 eg. as provided by the `limma` package.
 
 ```{r}
-pe[["peptideNorm"]] %>% 
+pe[["peptideNorm"]] %>%
   assay %>%
   limma::plotMDS(col = as.numeric(colData(pe)$genotype),label=colData(pe)$biorep)
 ```
@@ -206,7 +206,7 @@ pe <- aggregateFeatures(pe,
 
 
 ```{r}
-pe[["protein"]]%>% 
+pe[["protein"]]%>%
   assay %>%
   limma::plotMDS(col = as.numeric(colData(pe)$genotype),label=colData(pe)$biorep)
 ```
@@ -220,27 +220,27 @@ Note that the samples upon robust summarisation show a clear separation accordin
 We model the protein level expression values using `msqrob`.
 By default `msqrob2` estimates the model parameters using robust regression.
 
-We will model the data with a different group mean. 
+We will model the data with a different group mean.
 The group is incoded in the variable `genotype` of the colData.
-We will also have to include a random effect for bio-repeat to address the pseudo-replication in the experiment. 
+We will also have to include a random effect for bio-repeat to address the pseudo-replication in the experiment.
 Indeed, the data from the same bio-repeat will be correlated!
 
-We can specify this model by using a formula with the factor `genotype` as a fixed effect and as the factor `biorep` a random effect: 
+We can specify this model by using a formula with the factor `genotype` as a fixed effect and as the factor `biorep` a random effect:
 `formula = ~genotype + (1|biorep)`.
 
-In the current implementation of msqrob2, you can only work with mixed models if you set the ridge argument `ridge=TRUE`. 
-The fixed effects are then estimated using ridge regression and random effects can be introduced in the model. 
-Our implementation exploits the link between penalized ridge regression and mixed models. 
-Indeed, by reformulating the fixed effects as random effects ridge regression can be implemented and the ridge penalty is estimated from the data. 
+In the current implementation of msqrob2, you can only work with mixed models if you set the ridge argument `ridge=TRUE`.
+The fixed effects are then estimated using ridge regression and random effects can be introduced in the model.
+Our implementation exploits the link between penalized ridge regression and mixed models.
+Indeed, by reformulating the fixed effects as random effects ridge regression can be implemented and the ridge penalty is estimated from the data.
 
-Note, that ridge regression only works if two or more slope parameters have to be estimated for the fixed effects. Here, we only have a factor with two levels resulting in an encoding with only one slope parameter so the msqrob function will throw an error. 
+Note, that ridge regression only works if two or more slope parameters have to be estimated for the fixed effects. Here, we only have a factor with two levels resulting in an encoding with only one slope parameter so the msqrob function will throw an error.
 
 ```{r}
 try(pe <- msqrob(object = pe, i = "protein", formula = ~ genotype + (1|biorep),ridge=TRUE,overwrite=TRUE) )
 ```
 
-However, we can also encode ridge regression for the fixed effects directly by specifying the genotype also as a random effect. 
-More information on the link between ridge regression, mixed models and random effect can be found in 
+However, we can also encode ridge regression for the fixed effects directly by specifying the genotype also as a random effect.
+More information on the link between ridge regression, mixed models and random effect can be found in
 [@goeminne2016] and [@sticker2020]
 
 ```{r, warning=FALSE}
@@ -249,19 +249,19 @@ pe <- msqrob(object = pe, i = "protein", formula = ~ (1|genotype) + (1|biorep), 
 
 ## Inference
 
-First, we extract the parameter names of the model by looking at the first model. 
-The models are stored in the row data of the assay under the default name msqrobModels. 
+First, we extract the parameter names of the model by looking at the first model.
+The models are stored in the row data of the assay under the default name msqrobModels.
 
 ```{r}
 getCoef(rowData(pe[["protein"]])$msqrobModels[[1]])
 ```
 
-With our encoding we get an estimate for each genotype: 
-(Intercept)genotypeD8 and (Intercept)genotypeWT. 
+With our encoding we get an estimate for each genotype:
+(Intercept)genotypeD8 and (Intercept)genotypeWT.
 
 Thus, we assess the contrast '(Intercept)genotypeD8 - (Intercept)genotypeWT = 0' with our statistical test.
-Note, that specifying this contrast will not work with the default makeContrast function due to the parameter names. 
-So we therefore first 
+Note, that specifying this contrast will not work with the default makeContrast function due to the parameter names.
+So we therefore first
 
 ```{r}
 L <- makeContrast("genotypeD8 - genotypeWT=0", parameterNames = c("genotypeWT", "genotypeD8"))
@@ -308,7 +308,7 @@ heatmap(assay(pe[["protein"]])[sigNames, ])
 
 ### Detail plots
 
-We will make detail plots for the first 10 DE proteins. 
+We will make detail plots for the first 10 DE proteins.
 
 ```{r, warning=FALSE, message=FALSE}
 maxPlot <- 10
@@ -323,35 +323,35 @@ pePlotDf$condition <- as.factor(colData(pePlot)[pePlotDf$colname, "genotype"])
 # plotting
 p1 <- ggplot(data = pePlotDf,
        aes(x = colname, y = value, group = rowname)) +
-    geom_line() + 
-    geom_point() +  
+    geom_line() +
+    geom_point() +
     theme(axis.text.x = element_text(angle = 70, hjust = 1, vjust = 0.5)) +
-    facet_grid(~assay) + 
+    facet_grid(~assay) +
     ggtitle(protName)
 print(p1)
 
 # plotting 2
 p2 <- ggplot(pePlotDf, aes(x = colname, y = value, fill = condition)) +
-  geom_boxplot(outlier.shape = NA) + 
+  geom_boxplot(outlier.shape = NA) +
   geom_point(
     position = position_jitter(width = .1),
     aes(shape = rowname)) +
   scale_shape_manual(values = 1:nrow(pePlotDf)) +
-  labs(title = protName, x = "sample", y = "peptide intensity (log2)") + 
+  labs(title = protName, x = "sample", y = "peptide intensity (log2)") +
   theme(axis.text.x = element_text(angle = 70, hjust = 1, vjust = 0.5)) +
   facet_grid(~assay)
 print(p2)
 }
 ```
 
-Note, that the yeast protein is only covered by 3 peptides. 
-Only one peptide is picked up in condition A. 
-This peptide is also only once observed in spike-in condition B. 
-This puts a considerable burden upon the inference and could be avoided by more stringent filtering. 
+Note, that the yeast protein is only covered by 3 peptides.
+Only one peptide is picked up in condition A.
+This peptide is also only once observed in spike-in condition B.
+This puts a considerable burden upon the inference and could be avoided by more stringent filtering.
 
 # Session Info
 
-With respect to reproducibility, it is highly recommended to include a session info in your script so that readers of your output can see your particular setup of R. 
+With respect to reproducibility, it is highly recommended to include a session info in your script so that readers of your output can see your particular setup of R.
 
 ```{r}
 sessionInfo()
