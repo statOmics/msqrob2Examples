@@ -59,21 +59,21 @@ colData(pe)$location <- substr(
   colnames(pe[["peptideRaw"]]),
   11,
   11) %>%
-  unlist %>%  
+  unlist %>%
   as.factor
 
 colData(pe)$tissue <- substr(
     colnames(pe[["peptideRaw"]]),
     12,
     12) %>%
-    unlist %>%  
+    unlist %>%
     as.factor
 
 colData(pe)$patient <- substr(
   colnames(pe[["peptideRaw"]]),
   13,
   13) %>%
-  unlist %>%  
+  unlist %>%
   as.factor
 ```
 
@@ -127,9 +127,9 @@ In our approach a peptide can map to multiple proteins, as long as there is
 none of these proteins present in a smaller subgroup.
 
 ```{r}
-pe[["peptideLog"]] <-
- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$Proteins
- %in% smallestUniqueGroups(rowData(pe[["peptideLog"]])$Proteins),]
+pe <- filterFeatures(pe,
+  ~ Proteins %in% smallestUniqueGroups(rowData(pe[["peptideLog"]])$Proteins)
+)
 ```
 
 ### Remove reverse sequences (decoys) and contaminants
@@ -147,8 +147,7 @@ pe[["peptideLog"]] %>%
 No information on decoys.
 
 ```{r}
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$
-Potential.contaminant != "+", ]
+pe <- filterFeatures(pe, ~ Potential.contaminant != "+")
 ```
 
 ### Remove peptides of proteins that were only identified with modified peptides
@@ -160,7 +159,7 @@ I will skip this step for the moment. Large protein groups file needed for this.
 We keep peptides that were observed at last twice.
 
 ```{r}
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$nNonZero >= 2, ]
+pe <- filterFeatures(pe, ~ nNonZero >= 2)
 nrow(pe[["peptideLog"]])
 ```
 
@@ -196,7 +195,7 @@ limma::plotMDS(assay(pe[["peptideNorm"]]),
   col = colData(pe)$location:colData(pe)$tissue %>%
     as.numeric,
   labels = colData(pe) %>%
-    rownames %>%  
+    rownames %>%
     substr(start = 11, stop = 13)
   )
 ```
@@ -224,7 +223,7 @@ plotMDS(assay(pe[["proteinRobust"]]),
   col = colData(pe)$location:colData(pe)$tissue %>%
     as.numeric,
   labels = colData(pe) %>%
-    rownames %>%  
+    rownames %>%
     substr(start = 11, stop = 13)
 )
 ```
@@ -234,7 +233,7 @@ plotMDS(assay(pe[["proteinRobust"]]),
 ## Estimation
 
 We model the protein level expression values using `msqrob`.
-By default `msqrob2` estimates the model parameters using robust regression.  
+By default `msqrob2` estimates the model parameters using robust regression.
 
 ```{r, warning=FALSE}
 pe <- msqrob(
@@ -592,7 +591,7 @@ The following configurations can occur:
     - the interaction effect is twice as large in magnitude as the main effect but opposite in sign. This would mean that the log2 fold change in left and right side are equal in size but opposite in sign, implying that contrast that averages over the average log2 fold changes left and right would be zeor, which we could falsely reject
     - all effects are true.
 
-Hence, as soon as we enter the confirmation stage that we can at maximum make one false rejection so for this design and for our hypotheses of interest we do not have to correct for multiple testing in the second stage because we only have to account for the fact that we can at most make one false rejection.  
+Hence, as soon as we enter the confirmation stage that we can at maximum make one false rejection so for this design and for our hypotheses of interest we do not have to correct for multiple testing in the second stage because we only have to account for the fact that we can at most make one false rejection.
 
 So we can set the ```method="none"```
 ```{r}
@@ -616,4 +615,4 @@ Note, that
 - our more relaxed FDR correction enables us to reject more null hypotheses in the second stage.
 - we can recover `r length(sigNamesStageWise[[5]])` proteins with significant interactions.
 
-It is also very important to realise that setting the method to correct for multiple testing in the second stage at `method = none` is only correct for very specific designs and research hypotheses that are assessed. For most analyses we suggest to use the Holm method, which always we provide correct results. 
+It is also very important to realise that setting the method to correct for multiple testing in the second stage at `method = none` is only correct for very specific designs and research hypotheses that are assessed. For most analyses we suggest to use the Holm method, which always we provide correct results.

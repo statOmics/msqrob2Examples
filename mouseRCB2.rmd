@@ -59,7 +59,7 @@ colData(pe)$celltype <- substr(
   colnames(pe[["peptideRaw"]]),
   11,
   14) %>%
-  unlist %>%  
+  unlist %>%
   as.factor
 
 colData(pe)$mouse <- pe[[1]] %>%
@@ -119,9 +119,9 @@ In our approach a peptide can map to multiple proteins, as long as there is
 none of these proteins present in a smaller subgroup.
 
 ```{r}
-pe[["peptideLog"]] <-
- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$Proteins
- %in% smallestUniqueGroups(rowData(pe[["peptideLog"]])$Proteins),]
+pe <- filterFeatures(pe,
+  ~ Proteins %in% smallestUniqueGroups(rowData(pe[["peptideLog"]])$Proteins)
+)
 ```
 
 ### Remove reverse sequences (decoys) and contaminants
@@ -130,9 +130,8 @@ We now remove the contaminants, peptides that map to decoy sequences, and protei
 which were only identified by peptides with modifications.
 
 ```{r}
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$Reverse != "+", ]
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$
-Potential.contaminant != "+", ]
+pe <- filterFeatures(pe, ~ Reverse != "+")
+pe <- filterFeatures(pe, ~ Potential.contaminant != "+")
 ```
 
 ### Remove peptides of proteins that were only identified with modified peptides
@@ -144,7 +143,7 @@ I will skip this step for the moment. Large protein groups file needed for this.
 We keep peptides that were observed at last twice.
 
 ```{r}
-pe[["peptideLog"]] <- pe[["peptideLog"]][rowData(pe[["peptideLog"]])$nNonZero >= 2, ]
+pe <- filterFeatures(pe, ~ nNonZero >= 2)
 nrow(pe[["peptideLog"]])
 ```
 
@@ -206,7 +205,7 @@ plotMDS(assay(pe[["proteinRobust"]]), col = as.numeric(colData(pe)$celltype))
 ## Estimation
 
 We model the protein level expression values using `msqrob`.
-By default `msqrob2` estimates the model parameters using robust regression.  
+By default `msqrob2` estimates the model parameters using robust regression.
 
 ```{r, warning=FALSE}
 pe <- msqrob(
